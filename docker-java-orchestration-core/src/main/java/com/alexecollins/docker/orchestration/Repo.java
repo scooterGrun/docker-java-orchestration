@@ -70,7 +70,7 @@ class Repo {
         return new TokenReplacingReader(new FileReader(confFile), new PropertiesTokenResolver(properties));
     }
 
-    private boolean dockerfileExists(Id id) {
+    boolean dockerfileExists(Id id) {
         return new File(src, id + "/Dockerfile").exists();
     }
 
