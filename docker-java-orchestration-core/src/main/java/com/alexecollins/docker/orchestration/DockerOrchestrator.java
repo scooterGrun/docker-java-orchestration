@@ -493,7 +493,13 @@ public class DockerOrchestrator {
 
     private String createNewContainer(Id id) throws DockerException {
 
-        CreateContainerCmd cmd = docker.createContainerCmd(findImageId(id));
+        String imageId = findImageId(id);
+
+        if (imageId == null) {
+            throw new OrchestrationException("unable to find image ID for " + id);
+        }
+
+        CreateContainerCmd cmd = docker.createContainerCmd(imageId);
 
         Conf conf = conf(id);
 
