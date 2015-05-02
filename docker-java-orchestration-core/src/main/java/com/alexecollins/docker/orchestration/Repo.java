@@ -58,10 +58,20 @@ class Repo {
                 }
             }
         }
+        for (Map.Entry<Id, Conf> entry : confs.entrySet()) {
+            Id id = entry.getKey();
+            if (!(entry.getValue().hasImage()) ^ dockerfileExists(id)) {
+                throw new IllegalStateException("invalid repo, both image name and Dockerfile defined for " + id);
+            }
+        }
     }
 
     private static Reader confReader(File confFile, Properties properties) throws FileNotFoundException {
         return new TokenReplacingReader(new FileReader(confFile), new PropertiesTokenResolver(properties));
+    }
+
+    private boolean dockerfileExists(Id id) {
+        return new File(src, id + "/Dockerfile").exists();
     }
 
     public String tag(Id id) {
