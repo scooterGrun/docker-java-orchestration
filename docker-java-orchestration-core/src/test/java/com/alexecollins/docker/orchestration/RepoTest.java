@@ -17,13 +17,11 @@ public class RepoTest {
     private static final String PROJECT_VERSION = "1.0";
     private final Id appId = new Id("app");
     private final Id filterId = new Id("filter");
-    private Repo sut;
+    private final Properties properties = new Properties();
 
     @Before
     public void setUp() throws Exception {
-        Properties properties = new Properties();
         properties.setProperty("project.version", PROJECT_VERSION);
-        sut = new Repo("test", "test", new File("src/test/docker-repo"), properties);
     }
 
     @Test
@@ -37,7 +35,7 @@ public class RepoTest {
         expected.add(b);
         assertEquals(
                 expected,
-                sut.sort(links));
+                getSut().sort(links));
     }
 
     @Test
@@ -53,7 +51,7 @@ public class RepoTest {
         expected.add(c);
         assertEquals(
                 expected,
-                sut.sort(links));
+                getSut().sort(links));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -65,7 +63,7 @@ public class RepoTest {
         links.put(a, Collections.singletonList(c));
         links.put(d, Collections.singletonList(e));
         links.put(e, Collections.<Id>emptyList());
-        sut.sort(links);
+        getSut().sort(links);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -73,18 +71,22 @@ public class RepoTest {
         final Map<Id, List<Id>> links = new HashMap<>();
         final Id a = new Id("a");
         links.put(a, Collections.singletonList(a));
-        sut.sort(links);
+        getSut().sort(links);
     }
 
     @Test
     public void testPropertiesReplaced() throws Exception {
-        assertEquals("example-" + PROJECT_VERSION + ".jar", sut.conf(appId).getPackaging().getAdd().get(0).getPath());
+        assertEquals("example-" + PROJECT_VERSION + ".jar", getSut().conf(appId).getPackaging().getAdd().get(0).getPath());
     }
 
     @Test
     public void filesAreNotIncludedInIds() throws Exception {
-        List<Id> identifiers = sut.ids(false);
+        List<Id> identifiers = getSut().ids(false);
         assertEquals(identifiers.size(), 2);
         assertThat(identifiers, hasItems(appId, filterId));
+    }
+
+    private Repo getSut() {
+        return new Repo("test", "test", new File("src/test", "docker-repo"), properties);
     }
 }
