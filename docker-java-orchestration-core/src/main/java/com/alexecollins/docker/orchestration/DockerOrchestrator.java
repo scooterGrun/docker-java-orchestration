@@ -203,11 +203,8 @@ public class DockerOrchestrator {
         if (id == null) {
             throw new IllegalArgumentException("id is null");
         }
-        Conf conf = repo.conf(id);
-        if (conf.hasImage()) {
-            String image = conf.getImage();
-            logger.info("Pulling {}", image);
-            docker.pullImageCmd(image).exec();
+        if (hasImage(id)) {
+            pull(id);
             return;
         }
         try {
@@ -216,6 +213,20 @@ public class DockerOrchestrator {
             throw new OrchestrationException(e);
         }
 
+    }
+
+    private void pull(Id id) {
+        Conf conf = repo.conf(id);
+        if (!conf.hasImage()) {
+            throw new IllegalStateException("no image for " + id);
+        }
+        String image = conf.getImage();
+        logger.info("Pulling {}", image);
+        docker.pullImageCmd(image).exec();
+    }
+
+    private boolean hasImage(Id id) {
+        return repo.conf(id).hasImage();
     }
 
     private void validate(final Id id) {
