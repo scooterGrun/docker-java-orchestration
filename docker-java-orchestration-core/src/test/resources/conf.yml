@@ -13,3 +13,4 @@ logOnFailure: true
 maxLogLines: 123
 container:
   name: theName
+image: theImage

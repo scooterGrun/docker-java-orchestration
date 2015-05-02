@@ -1,8 +1,6 @@
 package com.alexecollins.docker.orchestration;
 
 import com.alexecollins.docker.orchestration.model.Id;
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.core.DockerClientBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,7 +21,6 @@ public class RepoTest {
 
     @Before
     public void setUp() throws Exception {
-        DockerClient client = DockerClientBuilder.getInstance("http://localhost:4240").build();
         Properties properties = new Properties();
         properties.setProperty("project.version", PROJECT_VERSION);
         sut = new Repo("test", "test", new File("src/test/docker-repo"), properties);

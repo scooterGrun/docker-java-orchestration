@@ -28,9 +28,14 @@ public class Conf {
     private Map<String, String> volumes = new HashMap<>();
     private boolean enabled = true;
     private boolean exposeContainerIp = true;
+    private String image;
 
     public boolean hasTag() {
         return tags != null && !tags.isEmpty();
+    }
+
+    public boolean hasImage() {
+        return image != null;
     }
 
     /**

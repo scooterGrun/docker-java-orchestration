@@ -44,4 +44,9 @@ public class ConfTest {
     public void enabled() throws Exception {
         assertEquals(true, conf.isEnabled());
     }
+
+    @Test
+    public void imageName() throws Exception {
+        assertEquals("theImage", conf.getImage());
+    }
 }
