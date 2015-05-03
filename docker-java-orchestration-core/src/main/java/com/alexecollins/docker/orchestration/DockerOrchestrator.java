@@ -1,7 +1,12 @@
 package com.alexecollins.docker.orchestration;
 
 
-import com.alexecollins.docker.orchestration.model.*;
+import com.alexecollins.docker.orchestration.model.BuildFlag;
+import com.alexecollins.docker.orchestration.model.Conf;
+import com.alexecollins.docker.orchestration.model.ContainerConf;
+import com.alexecollins.docker.orchestration.model.HealthChecks;
+import com.alexecollins.docker.orchestration.model.Id;
+import com.alexecollins.docker.orchestration.model.Ping;
 import com.alexecollins.docker.orchestration.plugin.api.Plugin;
 import com.alexecollins.docker.orchestration.util.Logs;
 import com.alexecollins.docker.orchestration.util.Pinger;
@@ -9,16 +14,41 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.DockerException;
 import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.NotFoundException;
-import com.github.dockerjava.api.command.*;
-import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.api.command.BuildImageCmd;
+import com.github.dockerjava.api.command.CreateContainerCmd;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.LogContainerCmd;
+import com.github.dockerjava.api.command.PushImageCmd;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.InternetProtocol;
 import com.github.dockerjava.api.model.Link;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.model.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -222,7 +252,14 @@ public class DockerOrchestrator {
         }
         String image = conf.getImage();
         logger.info("Creaing image from {}", image);
-        docker.createContainerCmd(image).exec();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(docker.pullImageCmd(image).exec()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                logger.info(line);
+            }
+        } catch (IOException e) {
+            throw new OrchestrationException(e);
+        }
     }
 
     private boolean hasImage(Id id) {
