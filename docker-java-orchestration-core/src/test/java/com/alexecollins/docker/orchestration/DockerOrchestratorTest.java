@@ -243,7 +243,7 @@ public class DockerOrchestratorTest {
 
         testObj.build();
 
-        verify(pullImageCmdMock).exec();
+        verify(createContainerCmdMock).exec();
 
     }
 
