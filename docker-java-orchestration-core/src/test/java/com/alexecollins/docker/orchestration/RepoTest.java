@@ -1,16 +1,31 @@
 package com.alexecollins.docker.orchestration;
 
+import com.alexecollins.docker.orchestration.model.Conf;
 import com.alexecollins.docker.orchestration.model.Id;
+import com.alexecollins.docker.orchestration.model.Packaging;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 
+@RunWith(Parameterized.class)
 public class RepoTest {
 
     public static final String DOCKER_REPO = "docker-repo";
@@ -22,6 +37,19 @@ public class RepoTest {
     @Before
     public void setUp() throws Exception {
         properties.setProperty("project.version", PROJECT_VERSION);
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {"docker-repo-v1"},
+                {"docker-repo-v2"},
+        });
+    }
+
+    @Test
+    public void explicitStartOrder() throws Exception {
+        assertEquals(Arrays.asList(filterId, appId), sut.ids(false));
     }
 
     @Test
@@ -79,8 +107,17 @@ public class RepoTest {
     }
 
     @Test
+    public void appHasPacking() throws Exception {
+        Conf conf = sut.conf(appId);
+        Packaging packaging = conf.getPackaging();
+        assertNotNull(packaging.getAdd().get(0));
+    }
+
+    @Test
     public void testPropertiesReplaced() throws Exception {
-        assertEquals("example-" + PROJECT_VERSION + ".jar", defaultRepo().conf(appId).getPackaging().getAdd().get(0).getPath());
+
+        Packaging packaging = sut.conf(appId).getPackaging();
+        assertEquals("example-" + PROJECT_VERSION + ".jar", packaging.getAdd().get(0).getPath());
     }
 
     @Test

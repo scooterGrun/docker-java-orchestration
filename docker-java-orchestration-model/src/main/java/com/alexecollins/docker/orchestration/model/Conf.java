@@ -3,7 +3,11 @@ package com.alexecollins.docker.orchestration.model;
 
 import lombok.Data;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Data
 public class Conf {
@@ -29,6 +33,16 @@ public class Conf {
     private boolean enabled = true;
     private boolean exposeContainerIp = true;
     private String image;
+
+    public Conf() {
+    }
+
+    @SuppressWarnings("UnusedParameters")
+    public Conf(String ignored) {
+        if (!ignored.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+    }
 
     public boolean hasTag() {
         return tags != null && !tags.isEmpty();
