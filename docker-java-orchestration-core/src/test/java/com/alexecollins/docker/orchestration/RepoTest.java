@@ -19,24 +19,23 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 
 @RunWith(Parameterized.class)
 public class RepoTest {
 
-    public static final String DOCKER_REPO = "docker-repo";
     private static final String PROJECT_VERSION = "1.0";
     private final Id appId = new Id("app");
     private final Id filterId = new Id("filter");
     private final Properties properties = new Properties();
+    private final String child;
 
-    @Before
-    public void setUp() throws Exception {
-        properties.setProperty("project.version", PROJECT_VERSION);
+    public RepoTest(String child) {
+        this.child = child;
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -47,9 +46,14 @@ public class RepoTest {
         });
     }
 
+    @Before
+    public void setUp() throws Exception {
+        properties.setProperty("project.version", PROJECT_VERSION);
+    }
+
     @Test
     public void explicitStartOrder() throws Exception {
-        assertEquals(Arrays.asList(filterId, appId), sut.ids(false));
+        assertEquals(Arrays.asList(filterId, appId), defaultRepo().ids(false));
     }
 
     @Test
@@ -95,7 +99,7 @@ public class RepoTest {
     }
 
     private Repo defaultRepo() {
-        return repo(DOCKER_REPO);
+        return repo(child);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -108,7 +112,7 @@ public class RepoTest {
 
     @Test
     public void appHasPacking() throws Exception {
-        Conf conf = sut.conf(appId);
+        Conf conf = defaultRepo().conf(appId);
         Packaging packaging = conf.getPackaging();
         assertNotNull(packaging.getAdd().get(0));
     }
@@ -116,7 +120,7 @@ public class RepoTest {
     @Test
     public void testPropertiesReplaced() throws Exception {
 
-        Packaging packaging = sut.conf(appId).getPackaging();
+        Packaging packaging = defaultRepo().conf(appId).getPackaging();
         assertEquals("example-" + PROJECT_VERSION + ".jar", packaging.getAdd().get(0).getPath());
     }
 
