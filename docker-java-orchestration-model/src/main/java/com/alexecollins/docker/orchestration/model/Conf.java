@@ -33,6 +33,7 @@ public class Conf {
     private boolean enabled = true;
     private boolean exposeContainerIp = true;
     private String image;
+    private List<String> extraHosts = new ArrayList<>();
 
     public Conf() {
     }

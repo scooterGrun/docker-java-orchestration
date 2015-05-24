@@ -1,12 +1,7 @@
 package com.alexecollins.docker.orchestration;
 
 
-import com.alexecollins.docker.orchestration.model.BuildFlag;
-import com.alexecollins.docker.orchestration.model.Conf;
-import com.alexecollins.docker.orchestration.model.ContainerConf;
-import com.alexecollins.docker.orchestration.model.HealthChecks;
-import com.alexecollins.docker.orchestration.model.Id;
-import com.alexecollins.docker.orchestration.model.Ping;
+import com.alexecollins.docker.orchestration.model.*;
 import com.alexecollins.docker.orchestration.plugin.api.Plugin;
 import com.alexecollins.docker.orchestration.util.Logs;
 import com.alexecollins.docker.orchestration.util.Pinger;
@@ -14,41 +9,18 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.DockerException;
 import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.NotFoundException;
-import com.github.dockerjava.api.command.BuildImageCmd;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.command.LogContainerCmd;
-import com.github.dockerjava.api.command.PushImageCmd;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.api.model.InternetProtocol;
+import com.github.dockerjava.api.command.*;
+import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.api.model.Link;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.core.NameParser;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -576,6 +548,11 @@ public class DockerOrchestrator {
         logger.info(" - env " + conf.getEnv());
         cmd.withEnv(asEnvList(conf.getEnv()));
 
+        if (!conf.getExtraHosts().isEmpty()) {
+            cmd.withExtraHosts(conf.getExtraHosts().toArray(new String[0]));
+            logger.info(" - extra hosts " + conf.getExtraHosts());
+        }
+
         return cmd.exec().getId();
     }
 
@@ -727,6 +704,19 @@ public class DockerOrchestrator {
 
     private void push(Id id) {
         try {
+            for (String otherTag : repo.conf(id).getTags()) {
+                NameParser.ReposTag reposTag = NameParser.parseRepositoryTag(otherTag);
+
+                PushImageCmd pushImageCmd = docker.pushImageCmd(reposTag.repos).withAuthConfig(docker.authConfig());
+
+                if (StringUtils.isNotBlank(reposTag.tag)) {
+                    pushImageCmd.withTag(reposTag.tag);
+                }
+                logger.info("Pushing " + id + " (" + otherTag + ")");
+
+                InputStream inputStream = pushImageCmd.exec();
+                throwExceptionIfThereIsAnError(inputStream);
+            }
             PushImageCmd pushImageCmd = docker.pushImageCmd(repo(id));
             logger.info("Pushing " + id + " (" + pushImageCmd.getName() + ")");
             try (InputStream inputStream = pushImageCmd.exec()) {
@@ -775,4 +765,5 @@ public class DockerOrchestrator {
         }
         throw new NoSuchElementException("plugin " + pluginClass + " is not loaded");
     }
+
 }
