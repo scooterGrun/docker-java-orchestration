@@ -28,6 +28,9 @@ import com.github.dockerjava.api.model.Link;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.NameParser;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -734,20 +737,10 @@ public class DockerOrchestrator {
 
     private void push(Id id) {
         try {
-            for (String otherTag : repo.conf(id).getTags()) {
-                NameParser.ReposTag reposTag = NameParser.parseRepositoryTag(otherTag);
-
-                PushImageCmd pushImageCmd = docker.pushImageCmd(reposTag.repos).withAuthConfig(docker.authConfig());
-
-                if (StringUtils.isNotBlank(reposTag.tag)) {
-                    pushImageCmd.withTag(reposTag.tag);
-                }
-                logger.info("Pushing " + id + " (" + otherTag + ")");
-
-                try (InputStream inputStream = pushImageCmd.exec()) {
-                    throwExceptionIfThereIsAnError(inputStream);
-                }
-            }
+            PushImageCmd pushImageCmd = docker.pushImageCmd(repo(id));
+            logger.info("Pushing " + id + " (" + pushImageCmd.getName() + ")");
+            InputStream inputStream = pushImageCmd.exec();
+            throwExceptionIfThereIsAnError(inputStream);
         } catch (DockerException | IOException e) {
             throw new OrchestrationException(e);
         }
@@ -791,5 +784,4 @@ public class DockerOrchestrator {
         }
         throw new NoSuchElementException("plugin " + pluginClass + " is not loaded");
     }
-
 }
