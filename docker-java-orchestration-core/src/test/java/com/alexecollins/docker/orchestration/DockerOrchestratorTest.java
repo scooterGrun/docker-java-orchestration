@@ -171,6 +171,7 @@ public class DockerOrchestratorTest {
         when(dockerMock.removeContainerCmd(CONTAINER_ID)).thenReturn(removeContainerCmdMock);
         when(dockerMock.listImagesCmd()).thenReturn(listImagesCmdMock);
         when(removeContainerCmdMock.withForce()).thenReturn(removeContainerCmdMock);
+        when(removeContainerCmdMock.withRemoveVolumes(anyBoolean())).thenReturn(removeContainerCmdMock);
 
         when(listImagesCmdMock.exec()).thenReturn(Collections.singletonList(imageMock));
 
@@ -244,6 +245,17 @@ public class DockerOrchestratorTest {
 
         verify(createContainerCmdMock, times(0)).exec();
         verify(startContainerCmdMock, times(0)).exec();
+    }
+
+    @Test
+    public void shouldRemoveExistingContainerWithForceDeleteAndVolumeRemoval() throws DockerException, IOException {
+        when(containerInspectResponseMock.getImageId()).thenReturn("A Different Image Id");
+
+        testObj.start();
+
+        verify(removeContainerCmdMock).withForce();
+        verify(removeContainerCmdMock).withRemoveVolumes(true);
+        verify(removeContainerCmdMock).exec();
     }
 
     @Test
